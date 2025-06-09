@@ -1,0 +1,8 @@
+__pycache__/
+.env
+*.pyc
+*.sqlite3
+.DS_Store
+venv/
+data/
+ollama_data/
