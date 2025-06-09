@@ -1,0 +1,43 @@
+services:
+  # Service 1: Serveur Ollama pour les LLM
+  ollama:
+    image: ollama/ollama
+    container_name: ollama_server
+    ports:
+      # Expose le port par défaut d'Ollama (11434) sur la machine hôte.
+      - "11434:11434"
+    volumes:
+      # Monte un volume nommé pour rendre les modèles LLM téléchargés persistants.
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - rag_network
+
+  # Service 2: Base de données PostgreSQL avec l'extension pgvector, pour stocker les documents sous format vectoriel (embeddings). 
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: postgres_db
+    environment:
+      # Variables d'environnement pour initialiser la base de données.
+      POSTGRES_DB: rag_db
+      POSTGRES_USER: rag_user
+      POSTGRES_PASSWORD: rag_password
+    ports:
+      # Expose le port de PostgreSQL (5432) sur le port 5433 de la machine hôte
+      - "5433:5432"
+    volumes:
+      # Monte un volume nommé pour rendre les données de la base persistantes.
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - rag_network
+
+# Déclaration des volumes nommés pour la persistance des données
+volumes:
+  ollama_data:
+  postgres_data:
+
+# Déclaration du réseau pour permettre la communication entre les conteneurs
+networks:
+  rag_network:
+    driver: bridge

@@ -1,0 +1,6 @@
+langchain
+langchain-community
+datasets
+psycopg2-binary
+ollama
+python-dotenv
