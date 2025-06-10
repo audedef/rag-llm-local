@@ -25,8 +25,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pandas")
 load_dotenv()
 
 # Configuration de la connexion à la base de données PostgreSQL
-# Les valeurs sont récupérées depuis les variables d'environnement,
-# qui doivent correspondre à celles définies dans votre docker-compose.yml.
+# Les valeurs sont récupérées depuis les variables d'environnement, correspondant à celles du docker-compose.
 DB_USER = os.getenv("POSTGRES_USER", "rag_user")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "rag_password")
 DB_HOST = os.getenv("POSTGRES_HOST", "postgres_db")
@@ -92,7 +91,7 @@ print("Cette étape peut prendre plusieurs minutes, en fonction du volume de don
 
 
 # --- DÉBUT DU BLOC DE DEBUG ---
-if chunks:
+""" if chunks:
     sample_chunk_content = chunks[0].page_content
     print(f"\n--- Diagnostic: Tentative de requête d'embedding pour un échantillon ---")
     print(f"Échantillon de texte: '{sample_chunk_content[:100]}...'")
@@ -144,18 +143,15 @@ if chunks:
         raise  # Rélève l'exception pour arrêter le script
     print("--- FIN DU BLOC DE DIAGNOSTIC ---")
 else:
-    print("Aucun chunk généré pour le diagnostic.")
+    print("Aucun chunk généré pour le diagnostic.") """
 
 
 # Initialisation du modèle d'embedding via le service Ollama
 embeddings = OllamaEmbeddings(model=EMBEDDING_MODEL, base_url=OLLAMA_BASE_URL)
 
 # Utilisation de la méthode `from_documents` de PGVector.
-# C'est une méthode très pratique qui gère pour vous :
-# 1. La connexion à la base de données.
-# 2. La création (si nécessaire) de la table pour la collection.
-# 3. La génération des embeddings pour chaque chunk en appelant le modèle Ollama.
-# 4. L'insertion des chunks et de leurs embeddings dans la base.
+# qui gère pour vous : la connexion à la base de données, la création (si nécessaire) de la table pour la collection,
+# la génération des embeddings pour chaque chunk en appelant le modèle Ollama et l'insertion des chunks et de leurs embeddings dans la base.
 try:
     PGVector.from_documents(
         embedding=embeddings,
