@@ -1,7 +1,7 @@
 services:
   # Service 1: Serveur Ollama pour les LLM
   ollama:
-    image: ollama/ollama
+    image: ollama/ollama:latest
     container_name: ollama_server
     ports:
       # Expose le port par défaut d'Ollama (11434) sur la machine hôte.
@@ -12,6 +12,16 @@ services:
     restart: unless-stopped
     networks:
       - rag_network
+    environment: # AJOUTEZ CETTE SECTION
+      OLLAMA_LOAD_TIMEOUT: 10m0s # Augmente le timeout de chargement des modèles à 10 minutes
+      OLLAMA_KEEP_ALIVE: 10m0s # Garde les modèles chargés en mémoire plus longtemps
+    healthcheck: # healthcheck pour s'assurer qu'Ollama est prêt
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s # Temps pour le démarrage initial d'Ollama
+    command: serve
 
   # Service 2: Base de données PostgreSQL avec l'extension pgvector, pour stocker les documents sous format vectoriel (embeddings). 
   postgres:
@@ -31,6 +41,40 @@ services:
     restart: unless-stopped
     networks:
       - rag_network
+    healthcheck: # healthcheck pour s'assurer que Postgres est prêt
+      test: ["CMD-SHELL", "pg_isready -U rag_user -d rag_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Service 3: mon application RAG en python
+  rag-app:
+    build:
+      context: ./rag_app # Le répertoire où se trouve le Dockerfile pour l'app
+      dockerfile: Dockerfile
+    container_name: rag_application
+    # ports: # Non nécessaire pour un script qui s'exécute et se termine
+    #   - "8000:8000" # Utile si je veux exposer une API Flask/FastAPI
+    environment:
+      # Variables d'environnement pour l'application RAG
+      POSTGRES_USER: rag_user
+      POSTGRES_PASSWORD: rag_password
+      POSTGRES_HOST: postgres_db # nom du service Docker
+      POSTGRES_PORT: 5432       # Port interne de Postgres dans le conteneur
+      POSTGRES_DB: rag_db     
+      OLLAMA_BASE_URL: http://ollama_server:11434 
+      EMBEDDING_MODEL: nomic-embed-text:latest # Modèle d'embedding à utiliser
+    volumes:
+      - ./rag_app:/app
+    networks:
+      - rag_network
+    depends_on:
+      ollama:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    # command: python -m app.ingest # à décommenter si je veux lancer l'ingestion au démarrage du conteneur
+    restart: on-failure # Redémarre en cas d'échec
 
 # Déclaration des volumes nommés pour la persistance des données
 volumes:
