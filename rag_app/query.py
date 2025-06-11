@@ -61,10 +61,9 @@ def main():
             embedding_function=embeddings,
         )
 
-        # Création d'un "retriever" à partir du vector store.
-        # pour récupérer les documents pertinents.
+        # Création d'un "retriever" à partir du vector store pour récupérer les documents pertinents.
         # k=3 signifie qu'on récupérera les 3 chunks les plus pertinents.
-        retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+        retriever = vector_store.as_retriever(search_kwargs={"k": 5})
         print("Retriever configuré pour chercher les 3 documents les plus pertinents.")
 
         # Initialisation du modèle de langage (LLM) via Ollama

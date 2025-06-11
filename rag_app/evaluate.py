@@ -15,6 +15,8 @@ from langchain_community.chat_models import ChatOllama
 from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
 from langchain.schema.output_parser import StrOutputParser
+from langchain.retrievers.multi_query import MultiQueryRetriever
+
 
 # 1. Configuration Initiale
 load_dotenv()
@@ -41,21 +43,26 @@ if OLLAMA_BASE_URL is None:
 test_questions = [
     {
         "type": "Dans la base de connaissances",
-        "question": "What is the recipe for Rieska ?"
+        "question": "Advise me some podcasts about love and relationships."
     },
+    # la question dans la base de connaissances : What are the five love and relationship podcasts mentioned in the context?
     {
         "type": "Dans la base de connaissances",
-        "question": "What is the Toronto Alternative Art Fair International ?"
+        "question": "Why must we recycle concrete in the construction industry?"
     },
+    # la question : What is the purpose of recycling concrete in construction?
     {
         "type": "Dans la base de connaissances",
-        "question": "Why was it the chaos in transportation in France, Germany and Belgium ?"
+        "question": "How many followers has the most followed person on Instagram?"
     },
+    # la question : Who is the most followed person on Instagram according to the context?
+
     {
-        # question contraire (qui n'est PAS éligible)
         "type": "Sujet proche mais hors base",
-        "question": "Who is eligible to enter the competition ?"
+        "question": "What are the fashion trends for next fall?"
     },
+    # la question : What are some trendy short hairstyles for fall?
+
     {
         "type": "Totalement hors base (Connaissance générale)",
         "question": "Who was the first First Lady of the United States?"
@@ -96,13 +103,15 @@ def setup_chains():
         collection_name=COLLECTION_NAME,
         embedding_function=embeddings,
     )
-    retriever = vector_store.as_retriever(
-        search_type="mmr",
-        search_kwargs={'k': 5, 'fetch_k': 20}
-    )
+
+    # simple retriever to evaluate the difference with multi-query
+    retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+    # base_retriever = vector_store.as_retriever()
+    # multi_query_retriever = MultiQueryRetriever.from_llm(
+    #    retriever=base_retriever, llm=llm)
 
     rag_prompt_template = """
-SYSTEM: Vous êtes un assistant expert. Utilisez UNIQUEMENT le contexte suivant pour répondre à la question. Si vous ne connaissez pas la réponse, dites "Je ne sais pas en me basant sur le contexte fourni."
+SYSTEM: Vous êtes un assistant expert. Utilisez UNIQUEMENT le contexte suivant pour répondre à la question. 
 CONTEXTE: {context}
 QUESTION: {question}
 RÉPONSE:"""
@@ -114,6 +123,7 @@ RÉPONSE:"""
         | llm
         | StrOutputParser()
     )
+# #Si vous ne connaissez pas la réponse, dites "Je ne sais pas en me basant sur le contexte fourni."
 
     # Non-RAG chain (avec LLM seul)
     non_rag_prompt_template = """
