@@ -63,7 +63,8 @@ services:
       POSTGRES_PORT: 5432       # Port interne de Postgres dans le conteneur
       POSTGRES_DB: rag_db     
       OLLAMA_BASE_URL: http://ollama_server:11434 
-      EMBEDDING_MODEL: nomic-embed-text:latest # Modèle d'embedding à utiliser
+      LLM_MODEL: gemma3:4b
+      EMBEDDING_MODEL: nomic-embed-text:latest 
     volumes:
       - ./rag_app:/app
     networks:

@@ -58,14 +58,17 @@ Le système est composé de trois services principaux :
     ```
     Dans ce cas, pas besoin de le re-télécharger.
 
-6. **Ingérer la base de connaissance :**
-    Exécutez le script d'ingestion depuis le conteneur `rag-app` : BAD COMMAND
+6. **Insérer votre fichier .env (optionnel) :**
+    Intégrer vos variables d'environnement dans un fichier .env à placer dans rag_app.
+
+7. **Ingérer la base de connaissance :**
+    Exécutez le script d'ingestion depuis le conteneur `rag-app` :
     ```bash
     docker compose exec rag-app python ingest.py
     ```
     Cela va traiter vos documents, créer des embeddings et les stocker dans PostgreSQL.
 
-7.  **Interroger le système RAG :**
+8.  **Interroger le système RAG :**
     Exécutez le script de requête depuis le conteneur `rag-app` :
     ```bash
     docker compose exec rag_application python query.py
@@ -77,3 +80,15 @@ Le système est composé de trois services principaux :
 Pour arrêter et supprimer les conteneurs et les volumes Docker (cela supprimera aussi les données Ollama et PostgreSQL) :
 ```bash
 docker compose down -v
+```
+
+## Evaluation
+
+Afin de prouver l'efficacité du système RAG, un script d'évaluation est à votre disposition.
+Il comporte déjà un ensemble de questions prédéfinies, basés sur la base de connaissance Hugging Face ingérée.
+Si vous souhaitez évaluer votre propre RAG, modifiez les questions dans le script evaluate.py en vous basant sur votre propre base de connaissances. 
+Puis exécutez le script avec :
+```bash
+docker compose exec rag_application python evaluate.py
+```
+Le résultat sortira sous forme de dataframe dans votre terminal, et sous forme de fichier markdown téléchargé dans votre dossier local.
