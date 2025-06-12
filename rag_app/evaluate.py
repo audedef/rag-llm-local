@@ -1,12 +1,6 @@
-# Ce script a pour but d'évaluer l'efficacité de notre RAG.
-# Il compare les réponses d'un LLM de base avec celles du même LLM
-# enrichi par le contexte récupéré dans la base de connaissances ingérée.
-# Le résultat est un tableau comparatif au format Markdown.
-
 import os
 import time
 import pandas as pd
-from dotenv import load_dotenv
 
 # Composants LangChain nécessaires
 from langchain_community.vectorstores.pgvector import PGVector
@@ -18,10 +12,7 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain.retrievers.multi_query import MultiQueryRetriever
 
 
-# 1. Configuration Initiale
-load_dotenv()
-
-# Configuration de la connexion à la base de données
+# Configuration Initiale
 DB_USER = os.getenv("POSTGRES_USER", "rag_user")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "rag_password")
 DB_HOST = os.getenv("POSTGRES_HOST", "postgres_db")
@@ -39,7 +30,7 @@ if OLLAMA_BASE_URL is None:
     print("Erreur: OLLAMA_BASE_URL n'est pas défini. Veuillez vérifier votre docker-compose.yml")
     exit(1)
 
-# 2. Définition des Questions de Test
+# Définition des questions de test
 test_questions = [
     {
         "type": "Dans la base de connaissances",
@@ -77,21 +68,18 @@ test_questions = [
 
 
 def log_retrieved_context(input_dict):
-    """
-    Affiche le contexte récupéré par le retriever -> étape de débogage
-    """
     print("\n[DEBUG] Contexte récupéré pour la question")
     if not input_dict.get('context'):
         print(">>> Le retriever n'a retourné aucun document.")
     else:
         for i, doc in enumerate(input_dict['context']):
             print(f"  [Doc {i+1}]: {doc.page_content[:150]}...")
-    print("--- [DEBUG] Fin du contexte ---\n")
+    print("[DEBUG] Fin du contexte\n")
     return input_dict
 
 
 def setup_chains():
-    """Initialise et retourne les deux chaînes à comparer : RAG et non-RAG."""
+
     # Initialisation des composants communs
     embeddings = OllamaEmbeddings(
         model=EMBEDDING_MODEL, base_url=OLLAMA_BASE_URL)
@@ -104,14 +92,16 @@ def setup_chains():
         embedding_function=embeddings,
     )
 
-    # simple retriever to evaluate the difference with multi-query
+    # simple retriever
     retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+    # multi-query pour évaluer la performance avec le retriever simple :
     # base_retriever = vector_store.as_retriever()
     # multi_query_retriever = MultiQueryRetriever.from_llm(
     #    retriever=base_retriever, llm=llm)
 
     rag_prompt_template = """
 SYSTEM: Vous êtes un assistant expert. Utilisez UNIQUEMENT le contexte suivant pour répondre à la question. 
+Si vous ne connaissez pas la réponse, dites simplement que vous ne savez pas. Ne tentez pas d'inventer une réponse.
 CONTEXTE: {context}
 QUESTION: {question}
 RÉPONSE:"""
@@ -123,7 +113,6 @@ RÉPONSE:"""
         | llm
         | StrOutputParser()
     )
-# #Si vous ne connaissez pas la réponse, dites "Je ne sais pas en me basant sur le contexte fourni."
 
     # Non-RAG chain (avec LLM seul)
     non_rag_prompt_template = """

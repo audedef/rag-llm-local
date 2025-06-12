@@ -30,6 +30,7 @@ Le système est composé de trois services principaux :
     *Note :* Vous pouvez utiliser également Hugging Face et sa lib Dataset pour l'importer directement.
 
 3.  **Démarrer les services Docker :**
+    Commencez par ouvrir Docker Desktop puis depuis rag-llm-local lancez la commande :
     ```bash
     docker-compose up --build -d
     ```
@@ -58,17 +59,14 @@ Le système est composé de trois services principaux :
     ```
     Dans ce cas, pas besoin de le re-télécharger.
 
-6. **Insérer votre fichier .env (optionnel) :**
-    Intégrer vos variables d'environnement dans un fichier .env à placer dans rag_app.
-
-7. **Ingérer la base de connaissance :**
+6. **Ingérer la base de connaissance :**
     Exécutez le script d'ingestion depuis le conteneur `rag-app` :
     ```bash
     docker compose exec rag-app python ingest.py
     ```
     Cela va traiter vos documents, créer des embeddings et les stocker dans PostgreSQL.
 
-8.  **Interroger le système RAG :**
+7.  **Interroger le système RAG :**
     Exécutez le script de requête depuis le conteneur `rag-app` :
     ```bash
     docker compose exec rag_application python query.py
