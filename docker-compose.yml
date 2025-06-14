@@ -4,17 +4,16 @@ services:
     image: ollama/ollama:latest
     container_name: ollama_server
     ports:
-      # Expose le port par défaut d'Ollama (11434) sur la machine hôte.
+      # Expose le port par défaut d'Ollama (11434) sur ma machine (l'hôte)
       - "11434:11434"
     volumes:
-      # Monte un volume nommé pour rendre les modèles LLM téléchargés persistants.
+      # Monte un volume pour rendre les modèles LLM téléchargés persistants.
       - ollama_data:/root/.ollama
-    restart: unless-stopped
     networks:
       - rag_network
-    environment: # AJOUTEZ CETTE SECTION
-      OLLAMA_LOAD_TIMEOUT: 10m0s # Augmente le timeout de chargement des modèles à 10 minutes
-      OLLAMA_KEEP_ALIVE: 10m0s # Garde les modèles chargés en mémoire plus longtemps
+    environment: 
+      OLLAMA_LOAD_TIMEOUT: 10m0s 
+      OLLAMA_KEEP_ALIVE: 10m0s 
     healthcheck: # healthcheck pour s'assurer qu'Ollama est prêt
       test: ["CMD-SHELL", "ollama list || exit 1"]
       interval: 10s
@@ -33,12 +32,11 @@ services:
       POSTGRES_USER: rag_user
       POSTGRES_PASSWORD: rag_password
     ports:
-      # Expose le port de PostgreSQL (5432) sur le port 5433 de la machine hôte
+      # Expose le port de PostgreSQL (5432) sur le port 5433 de ma machine
       - "5433:5432"
     volumes:
-      # Monte un volume nommé pour rendre les données de la base persistantes.
+      # Monte un volume pour rendre les données de la base persistantes.
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
     networks:
       - rag_network
     healthcheck: # healthcheck pour s'assurer que Postgres est prêt
@@ -53,8 +51,6 @@ services:
       context: ./rag_app # Le répertoire où se trouve le Dockerfile pour l'app
       dockerfile: Dockerfile
     container_name: rag_application
-    # ports: # Non nécessaire pour un script qui s'exécute et se termine
-    #   - "8000:8000" # Utile si je veux exposer une API Flask/FastAPI
     environment:
       # Variables d'environnement pour l'application RAG
       POSTGRES_USER: rag_user
@@ -74,7 +70,6 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    # command: python -m app.ingest # à décommenter si je veux lancer l'ingestion au démarrage du conteneur
     restart: on-failure # Redémarre en cas d'échec
 
 # Déclaration des volumes nommés pour la persistance des données
